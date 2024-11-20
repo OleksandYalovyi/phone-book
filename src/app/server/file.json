@@ -1,6 +1,1 @@
-{
-  "contacts": [
-    { "id": 0, "fullName": "Alex", "phone": "574111111" },
-    { "id": 1, "fullName": "John Doe", "phone": "+123456789" }
-  ]
-}
+{"contacts":[{"id":0,"fullName":"Alex","phone":"574111111"},{"id":2,"fullName":"Yana","phone":"123456789"},{"id":3,"fullName":"San Sanch","phone":"1234464565"}]}

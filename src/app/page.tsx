@@ -1,27 +1,35 @@
 "use client";
-import { useState } from "react";
-
-const STORAGE_KEY = "list";
+import { useEffect, useState } from "react";
 
 type Record = {
-  id: string;
+  id: number;
   fullName: string;
   phone: string;
 };
 
 const newRecordInit = {
-  id: "",
+  id: 0,
   fullName: "",
   phone: "",
 };
 
 const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+const API_URL = "http://localhost:3001";
 
 export default function Home() {
-  const [records, setRecords] = useState<Record[]>(
-    JSON.parse(window.localStorage.getItem(STORAGE_KEY) as string) || []
-  );
+  const [records, setRecords] = useState<Record[]>([]);
   const [newRecord, setNewRecord] = useState<Record>(newRecordInit as Record);
+
+  useEffect(() => {
+    const fetchRecords = async () => {
+      const res = await fetch(`${API_URL}/contacts`);
+      const contactsRes = await res.json();
+
+      setRecords(contactsRes);
+    };
+
+    fetchRecords();
+  }, []);
 
   const handleChange = (key: string) => (e) => {
     setNewRecord((prevV) => ({
@@ -30,9 +38,9 @@ export default function Home() {
     }));
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const recordToAdd = {
-      id: records.length.toString(),
+      id: records.length,
       fullName: newRecord.fullName.trim(),
       phone: newRecord.phone.trim(),
     };
@@ -45,18 +53,30 @@ export default function Home() {
       return alert("Fill correct data please!");
     }
 
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify([...records, recordToAdd])
-    );
+    const res = await fetch(`${API_URL}/contacts`, {
+      method: "POST",
+      body: JSON.stringify(recordToAdd),
+      headers: {
+        "Content-Type": "application/json", // Specify JSON format
+      },
+    });
+
+    if (!res.ok) {
+      return alert("Something went wrong!");
+    }
+
     setRecords((prevRecords) => [...prevRecords, recordToAdd]);
+    setNewRecord(newRecordInit);
   };
 
-  const removeRecord = (id: string) => {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(records.filter((r) => r.id !== id))
-    );
+  const removeRecord = async (id: number) => {
+    const res = await fetch(`${API_URL}/contacts/${id}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) {
+      return alert("Something went wrong");
+    }
+
     setRecords((prevRecords) => prevRecords.filter((r) => r.id !== id));
   };
 
