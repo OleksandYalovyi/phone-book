@@ -2,19 +2,18 @@
 import { useEffect, useState } from "react";
 
 type Record = {
-  id: number;
+  _id: string;
   fullName: string;
   phone: string;
 };
 
 const newRecordInit = {
-  id: 0,
+  _id: "",
   fullName: "",
   phone: "",
 };
 
 const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-const API_URL = "http://localhost:3001";
 
 export default function Home() {
   const [records, setRecords] = useState<Record[]>([]);
@@ -22,8 +21,9 @@ export default function Home() {
 
   useEffect(() => {
     const fetchRecords = async () => {
-      const res = await fetch(`${API_URL}/contacts`);
+      const res = await fetch(`/api/contacts`);
       const contactsRes = await res.json();
+      console.log(contactsRes);
 
       setRecords(contactsRes);
     };
@@ -40,7 +40,6 @@ export default function Home() {
 
   const handleAdd = async () => {
     const recordToAdd = {
-      id: records.length,
       fullName: newRecord.fullName.trim(),
       phone: newRecord.phone.trim(),
     };
@@ -53,7 +52,7 @@ export default function Home() {
       return alert("Fill correct data please!");
     }
 
-    const res = await fetch(`${API_URL}/contacts`, {
+    const res = await fetch(`/api/contacts`, {
       method: "POST",
       body: JSON.stringify(recordToAdd),
       headers: {
@@ -65,19 +64,21 @@ export default function Home() {
       return alert("Something went wrong!");
     }
 
-    setRecords((prevRecords) => [...prevRecords, recordToAdd]);
+    const created = await res.json();
+
+    setRecords((prevRecords) => [...prevRecords, created]);
     setNewRecord(newRecordInit);
   };
 
-  const removeRecord = async (id: number) => {
-    const res = await fetch(`${API_URL}/contacts/${id}`, {
+  const removeRecord = async (_id: string) => {
+    const res = await fetch(`/api/contacts/${_id}`, {
       method: "DELETE",
     });
     if (!res.ok) {
       return alert("Something went wrong");
     }
 
-    setRecords((prevRecords) => prevRecords.filter((r) => r.id !== id));
+    setRecords((prevRecords) => prevRecords.filter((r) => r._id !== _id));
   };
 
   return (
@@ -118,17 +119,17 @@ export default function Home() {
         </thead>
         <tbody>
           {records.length > 0 ? (
-            records.map(({ id, fullName, phone }) => (
+            records.map(({ _id, fullName, phone }, index) => (
               <tr
-                key={id}
+                key={_id}
                 className="odd:bg-gray-100 even:bg-white hover:bg-blue-100 transition-colors"
               >
-                <td className="px-4 py-3 text-black">{id + 1}</td>
+                <td className="px-4 py-3 text-black">{index + 1}</td>
                 <td className="px-4 py-3 text-black">{fullName}</td>
                 <td className="px-4 py-3 text-black">{phone}</td>
                 <td className="px-4 py-3">
                   <button
-                    onClick={() => removeRecord(id)}
+                    onClick={() => removeRecord(_id)}
                     className="text-red-500 hover:text-red-700 focus:outline-none"
                   >
                     Remove
